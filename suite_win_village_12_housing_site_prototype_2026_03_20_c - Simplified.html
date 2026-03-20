@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Housing Home Board</title>
+  <style>
+    :root {
+      --ui-label: hsl(47 97% 60%);
+      --ui-bg: hsl(70 23% 49%);
+      --ui-line: hsl(0 1% 15%);
+      --panel: hsl(70 18% 55%);
+      --panel-2: hsl(70 15% 61%);
+      --soft: hsl(70 18% 74%);
+      --board-bg: #fff8ec;
+      --board-fg: #1e1c18;
+      --board-line: rgba(0,0,0,0.08);
+      --ok: #234d24;
+      --warn: #7c3d00;
+      --shadow: 0 8px 20px rgba(0,0,0,0.16);
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background: var(--ui-bg);
+      color: var(--ui-line);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 220px 300px minmax(420px, 1fr) 320px;
+      grid-template-rows: auto auto 1fr;
+      min-height: 100vh;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--ui-line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .sidebar { grid-row: 1 / span 3; padding: 14px; }
+    .topbar { grid-column: 2 / span 3; padding: 10px 12px; display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .filters { grid-column: 2 / span 3; padding: 10px 12px; display:flex; flex-wrap:wrap; gap:10px; align-items:end; }
+    .subject-panel { grid-column: 2; padding: 10px; display:flex; flex-direction:column; }
+    .editor-panel { grid-column: 3; display:grid; grid-template-rows: auto auto 1fr; }
+    .right-panel { grid-column: 4; padding: 10px; display:flex; flex-direction:column; gap:10px; }
+
+    .brand {
+      color: var(--ui-label);
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .subtitle { font-size: 0.9rem; opacity: 0.9; margin-bottom: 14px; }
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .nav button, .action, select, input, textarea {
+      font: inherit;
+    }
+    .nav button, .action {
+      background: var(--panel-2);
+      color: var(--ui-line);
+      border: 1px solid var(--ui-line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .nav button.active { background: var(--ui-label); }
+
+    .group-title {
+      color: var(--ui-label);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+
+    .row { display:flex; gap:8px; align-items:center; }
+    .row.wrap { flex-wrap: wrap; }
+    .space { justify-content:space-between; }
+    .stat {
+      background: var(--panel-2);
+      border: 1px solid var(--ui-line);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+
+    label { font-size: 0.82rem; font-weight: 700; display:block; margin-bottom: 4px; }
+    select, input[type="text"], input[type="datetime-local"], input[type="color"], textarea {
+      width: 100%;
+      border: 1px solid var(--ui-line);
+      background: rgba(255,255,255,0.65);
+      border-radius: 10px;
+      padding: 9px 10px;
+      color: var(--ui-line);
+    }
+    textarea { resize: vertical; min-height: 180px; }
+
+    .subject-list {
+      display: grid;
+      gap: 8px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .subject-card {
+      background: var(--panel-2);
+      border: 1px solid var(--ui-line);
+      border-radius: 12px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .subject-card.active { outline: 2px solid var(--ui-label); }
+    .subject-head {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size: 0.75rem;
+      opacity: 0.88;
+      margin-bottom: 5px;
+    }
+    .subject-title { font-weight: 800; margin-bottom: 4px; }
+    .subject-meta { font-size: 0.8rem; opacity: 0.92; display:flex; gap:6px; flex-wrap:wrap; }
+    .chip {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 0.75rem;
+    }
+
+    .timer-strip { display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding: 10px; border-bottom:1px solid var(--ui-line); }
+    .timer-card {
+      background: var(--panel-2);
+      border:1px solid var(--ui-line);
+      border-radius: 12px;
+      padding:10px;
+    }
+    .timer-name { font-weight: 800; color: var(--ui-label); }
+    .timer-due { font-size: 0.92rem; margin-top: 4px; }
+
+    .editor-head {
+      padding: 10px;
+      border-bottom:1px solid var(--ui-line);
+      display:grid;
+      grid-template-columns: 1fr 200px;
+      gap:10px;
+      align-items:end;
+    }
+    .board-wrap {
+      padding: 10px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.08), transparent);
+    }
+    .board {
+      background: var(--board-bg);
+      color: var(--board-fg);
+      border: 1px solid var(--ui-line);
+      border-radius: 12px;
+      min-height: 420px;
+      display:grid;
+      grid-template-rows: auto 1fr;
+      overflow:hidden;
+    }
+    .board-header {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid var(--board-line);
+      background: rgba(255,255,255,0.5);
+      font-size: 0.86rem;
+    }
+    .board-title {
+      font-weight: 800;
+      font-size: 1rem;
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+    .board-body {
+      width: 100%;
+      min-height: 340px;
+      border: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 27px,
+          var(--board-line) 27px,
+          var(--board-line) 28px
+        ),
+        var(--board-bg);
+      color: var(--board-fg);
+      padding: 12px;
+      line-height: 28px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .right-card {
+      background: var(--panel-2);
+      border:1px solid var(--ui-line);
+      border-radius:12px;
+      padding:10px;
+    }
+    .swatches { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+    .swatch {
+      border:1px solid rgba(0,0,0,0.25);
+      border-radius:10px;
+      height: 42px;
+      cursor: pointer;
+      position: relative;
+    }
+    .swatch span {
+      position:absolute; inset:auto 4px 4px 4px;
+      background: rgba(255,255,255,0.75);
+      border-radius: 6px;
+      padding: 1px 4px;
+      font-size: 0.7rem;
+      text-align:center;
+    }
+
+    .small { font-size: 0.82rem; opacity: 0.92; }
+    .muted { opacity: 0.72; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .danger { background: #ffd8d8; }
+    .ok { background: #d9f0d6; }
+
+    @media (max-width: 1200px) {
+      .app {
+        grid-template-columns: 220px 1fr;
+        grid-template-rows: auto auto auto auto auto;
+      }
+      .sidebar { grid-row: 1 / span 5; }
+      .topbar, .filters, .subject-panel, .editor-panel, .right-panel { grid-column: 2; }
+      .subject-panel { max-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel sidebar">
+      <div class="brand">Housing Home Board</div>
+      <div class="subtitle">Session log — Europe/Paris — 2026-03-20</div>
+
+      <div class="nav">
+        <button class="active">Board</button>
+        <button>Notes</button>
+        <button>Colors</button>
+        <button>Settings</button>
+      </div>
+
+      <div class="group-title">Data</div>
+      <div class="actions" style="margin-bottom:12px;">
+        <button class="action" id="newNoteBtn">New note</button>
+        <button class="action" id="loadBtn">Load JSON</button>
+        <button class="action" id="saveLocalBtn">Save local</button>
+        <button class="action" id="exportSessionBtn">Export session</button>
+      </div>
+      <input type="file" id="fileInput" accept="application/json" multiple hidden />
+
+      <div class="group-title">Session</div>
+      <div class="small" id="sessionInfo">0 vault loaded · 0 note</div>
+      <div class="small" id="filterInfo" style="margin-top:8px;">No category filter</div>
+    </aside>
+
+    <section class="panel topbar">
+      <div class="row wrap">
+        <div class="stat" id="vaultCount">Vaults: 0</div>
+        <div class="stat" id="noteCount">Notes: 0 / 12 shown</div>
+        <div class="stat" id="eventCount">Upcoming events: 0</div>
+      </div>
+      <div class="row wrap">
+        <button class="action" id="importIndexBtn">Load event index</button>
+        <button class="action" id="exportIndexBtn">Export event index</button>
+      </div>
+    </section>
+
+    <section class="panel filters">
+      <div style="min-width:200px;">
+        <label for="categoryFilter">Category</label>
+        <select id="categoryFilter"></select>
+      </div>
+      <div style="min-width:180px;">
+        <label for="sortFilter">View</label>
+        <select id="sortFilter">
+          <option value="createdAt">Creation date</option>
+          <option value="eventAt">Event date</option>
+        </select>
+      </div>
+      <div style="min-width:220px;">
+        <label for="dateBucketFilter">Date jump</label>
+        <select id="dateBucketFilter"></select>
+      </div>
+      <div class="row" style="margin-left:auto; gap:6px;">
+        <button class="action" id="prevDateBtn">←</button>
+        <button class="action" id="nextDateBtn">→</button>
+      </div>
+    </section>
+
+    <section class="panel subject-panel">
+      <div class="row space" style="margin-bottom:10px;">
+        <div class="group-title" style="margin:0;">Notes</div>
+        <div class="small muted">up to 12 visible</div>
+      </div>
+      <div class="subject-list" id="subjectList"></div>
+    </section>
+
+    <section class="panel editor-panel">
+      <div class="timer-strip">
+        <div class="timer-card">
+          <div class="timer-name">Gardening month</div>
+          <div class="timer-due" id="gardeningDue"></div>
+          <div class="small" id="gardeningLink"></div>
+        </div>
+        <div class="timer-card">
+          <div class="timer-name">Crafting month</div>
+          <div class="timer-due" id="craftingDue"></div>
+          <div class="small" id="craftingLink"></div>
+        </div>
+      </div>
+
+      <div class="editor-head">
+        <div>
+          <label for="noteCategory">Selected note category</label>
+          <select id="noteCategory"></select>
+        </div>
+        <div>
+          <label for="eventAtInput">Event date/time</label>
+          <input id="eventAtInput" type="datetime-local" />
+		  <button class="action ok" id="saveNoteBtn" type="button">Save note</button>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board">
+          <div class="board-header">
+            <div>
+              <div class="small muted">Created: <span id="createdAtLabel">—</span></div>
+              <input id="titleInput" class="board-title" placeholder="Title" />
+            </div>
+            <div class="small" style="text-align:right;">
+              <div class="muted">Event</div>
+              <div id="eventAtLabel">—</div>
+            </div>
+          </div>
+          <textarea id="bodyInput" class="board-body" placeholder="Write your house note here..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel right-panel">
+      <div class="right-card">
+        <div class="group-title">Board style</div>
+        <div class="row">
+          <div style="flex:1;">
+            <label for="fgColor">Text</label>
+            <input id="fgColor" type="color" value="#1e1c18" />
+          </div>
+          <div style="flex:1;">
+            <label for="bgColor">Background</label>
+            <input id="bgColor" type="color" value="#fff8ec" />
+          </div>
+          <div style="flex:1;">
+            <label for="lineColor">Lines</label>
+            <input id="lineColor" type="color" value="#d6cfbf" />
+          </div>
+        </div>
+      </div>
+
+      <div class="right-card">
+        <div class="group-title">Fixed swatches</div>
+        <div class="swatches" id="swatches"></div>
+        <div class="small muted" style="margin-top:8px;">Click a swatch to append its label in the text.</div>
+      </div>
+
+      <div class="right-card">
+        <div class="group-title">Note tools</div>
+        <div class="actions">
+          <button class="action ok" id="duplicateBtn">Duplicate</button>
+          <button class="action danger" id="deleteBtn">Delete</button>
+        </div>
+      </div>
+
+      <div class="right-card">
+        <div class="group-title">Upcoming events</div>
+        <div id="eventPreview" class="small">No event loaded.</div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+  const FIXED_CATEGORIES = [
+    'home_maintenance',
+    'seasonal_event',
+    'gardening_culture',
+    'quest',
+    'request',
+    'custom_01',
+    'custom_02',
+    'custom_03',
+    'custom_04',
+    'custom_05',
+    'custom_06',
+    'custom_07',
+    'custom_08'
+  ];
+
+  const DEFAULT_SWATCHES = [
+    { name: 'Sun', value: '#f7cb3e' },
+    { name: 'Honey', value: '#e8af29' },
+    { name: 'Olive', value: '#7a8143' },
+    { name: 'Moss', value: '#66734d' },
+    { name: 'Clay', value: '#ad7a5b' },
+    { name: 'Rose', value: '#d19099' },
+    { name: 'Sky', value: '#84b6d8' },
+    { name: 'Night', value: '#4c5c7c' }
+  ];
+
+  const STORAGE_KEY = 'housing-home-board-session';
+  const UI_KEY = 'housing-home-board-ui';
+
+  const nowIso = () => new Date().toISOString();
+  const idOf = (prefix = 'id') => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+  const toInputDateTime = (iso) => iso ? new Date(iso).toISOString().slice(0, 16) : '';
+  const pretty = (iso) => iso ? new Date(iso).toLocaleString() : '—';
+  const dateBucket = (iso) => iso ? new Date(iso).toISOString().slice(0, 10) : 'No date';
+
+  const sampleData = {
+    sources: [{ file: 'starter_vault.json' }],
+    subjects: [
+      {
+        id: 'subj_001',
+        sourceFile: 'starter_vault.json',
+        title: 'Garden March',
+        body: 'Plant blue flowers near the west wall. Check moonlight cloth after reset.',
+        category: 'gardening_culture',
+        createdAt: '2026-03-20T09:00:00Z',
+        eventAt: '2026-04-01T09:00:00Z',
+        linkedTimerIds: ['timer_garden_month'],
+        tags: ['garden', 'spring'],
+        zone: 'garden',
+        pinned: true,
+        updatedAt: '2026-03-20T09:00:00Z'
+      },
+      {
+        id: 'subj_002',
+        sourceFile: 'starter_vault.json',
+        title: 'Workshop polish',
+        body: 'Prepare wood dye set and compare warm cloth colors for benches.',
+        category: 'home_maintenance',
+        createdAt: '2026-03-18T12:00:00Z',
+        eventAt: '2026-04-03T18:00:00Z',
+        linkedTimerIds: ['timer_craft_month'],
+        tags: ['workshop'],
+        zone: 'workshop',
+        pinned: false,
+        updatedAt: '2026-03-18T12:00:00Z'
+      }
+    ],
+    timers: [
+      {
+        id: 'timer_garden_month',
+        title: 'Gardening Month',
+        category: 'gardening',
+        targetAt: '2026-04-01T00:00:00Z',
+        monthlyRepeat: true,
+        linkedSubjectId: 'subj_001',
+        done: false
+      },
+      {
+        id: 'timer_craft_month',
+        title: 'Crafting Month',
+        category: 'crafting',
+        targetAt: '2026-04-01T00:00:00Z',
+        monthlyRepeat: true,
+        linkedSubjectId: 'subj_002',
+        done: false
+      }
+    ],
+    colorSets: [
+      { id: 'palette_001', title: 'Starter', colors: DEFAULT_SWATCHES, favorite: true }
+    ]
+  };
+
+  const state = {
+    subjects: structuredClone(sampleData.subjects),
+    timers: structuredClone(sampleData.timers),
+    colorSets: structuredClone(sampleData.colorSets),
+    sources: structuredClone(sampleData.sources),
+    activeId: sampleData.subjects[0].id,
+    categoryFilter: 'all',
+    sortFilter: 'createdAt',
+    dateBucketFilter: 'all',
+    eventIndex: null,
+    activeView: 'board'
+  };
+
+  const els = {
+    subjectList: document.getElementById('subjectList'),
+    categoryFilter: document.getElementById('categoryFilter'),
+    sortFilter: document.getElementById('sortFilter'),
+    dateBucketFilter: document.getElementById('dateBucketFilter'),
+    prevDateBtn: document.getElementById('prevDateBtn'),
+    nextDateBtn: document.getElementById('nextDateBtn'),
+    titleInput: document.getElementById('titleInput'),
+    bodyInput: document.getElementById('bodyInput'),
+    createdAtLabel: document.getElementById('createdAtLabel'),
+    eventAtLabel: document.getElementById('eventAtLabel'),
+    eventAtInput: document.getElementById('eventAtInput'),
+    noteCategory: document.getElementById('noteCategory'),
+    fgColor: document.getElementById('fgColor'),
+    bgColor: document.getElementById('bgColor'),
+    lineColor: document.getElementById('lineColor'),
+    swatches: document.getElementById('swatches'),
+    gardeningDue: document.getElementById('gardeningDue'),
+    craftingDue: document.getElementById('craftingDue'),
+    gardeningLink: document.getElementById('gardeningLink'),
+    craftingLink: document.getElementById('craftingLink'),
+    newNoteBtn: document.getElementById('newNoteBtn'),
+    duplicateBtn: document.getElementById('duplicateBtn'),
+    deleteBtn: document.getElementById('deleteBtn'),
+    loadBtn: document.getElementById('loadBtn'),
+    fileInput: document.getElementById('fileInput'),
+    saveLocalBtn: document.getElementById('saveLocalBtn'),
+    exportSessionBtn: document.getElementById('exportSessionBtn'),
+    importIndexBtn: document.getElementById('importIndexBtn'),
+    exportIndexBtn: document.getElementById('exportIndexBtn'),
+    sessionInfo: document.getElementById('sessionInfo'),
+    filterInfo: document.getElementById('filterInfo'),
+    vaultCount: document.getElementById('vaultCount'),
+    noteCount: document.getElementById('noteCount'),
+    eventCount: document.getElementById('eventCount'),
+    eventPreview: document.getElementById('eventPreview'),
+    saveNoteBtn: document.getElementById('saveNoteBtn'),
+    navButtons: [...document.querySelectorAll('.nav button')]
+  };
+
+  function getActiveNote() {
+    return state.subjects.find(s => s.id === state.activeId) || null;
+  }
+
+  function setActive(id) {
+    state.activeId = id;
+    saveUI();
+    render();
+  }
+
+  function persistActive() {
+    const note = getActiveNote();
+    if (!note) return;
+    note.title = els.titleInput.value;
+    note.body = els.bodyInput.value;
+    note.category = els.noteCategory.value;
+    note.eventAt = els.eventAtInput.value ? new Date(els.eventAtInput.value).toISOString() : null;
+    note.updatedAt = nowIso();
+  }
+
+  function saveUI() {
+    localStorage.setItem(UI_KEY, JSON.stringify({
+      categoryFilter: state.categoryFilter,
+      sortFilter: state.sortFilter,
+      dateBucketFilter: state.dateBucketFilter,
+      activeId: state.activeId,
+      activeView: state.activeView,
+      boardStyle: {
+        bg: getComputedStyle(document.documentElement).getPropertyValue('--board-bg').trim(),
+        fg: getComputedStyle(document.documentElement).getPropertyValue('--board-fg').trim(),
+        line: getComputedStyle(document.documentElement).getPropertyValue('--board-line').trim()
+      }
+    }));
+  }
+
+  function saveSession() {
+    persistActive();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sources: state.sources,
+      subjects: state.subjects,
+      timers: state.timers,
+      colorSets: state.colorSets,
+      eventIndex: state.eventIndex,
+      savedAt: nowIso()
+    }));
+    saveUI();
+  }
+
+  function saveCurrentNote() {
+    persistActive();
+    saveSession();
+    render();
+  }
+
+  function visibleSubjects() {
+    let arr = [...state.subjects];
+    if (state.categoryFilter !== 'all') arr = arr.filter(s => s.category === state.categoryFilter);
+    arr.sort((a, b) => (a[state.sortFilter] || '').localeCompare(b[state.sortFilter] || ''));
+    const buckets = [...new Set(arr.map(s => dateBucket(s[state.sortFilter])))];
+    if (!buckets.includes(state.dateBucketFilter)) state.dateBucketFilter = buckets[0] || 'all';
+    if (state.dateBucketFilter !== 'all') arr = arr.filter(s => dateBucket(s[state.sortFilter]) === state.dateBucketFilter);
+    return arr.slice(0, 12);
+  }
+
+  function updateFilterOptions() {
+    const categoryOptions = ['all', ...FIXED_CATEGORIES];
+    els.categoryFilter.innerHTML = categoryOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+    els.noteCategory.innerHTML = FIXED_CATEGORIES.map(v => `<option value="${v}">${v}</option>`).join('');
+    els.categoryFilter.value = state.categoryFilter;
+    els.sortFilter.value = state.sortFilter;
+
+    let arr = [...state.subjects];
+    if (state.categoryFilter !== 'all') arr = arr.filter(s => s.category === state.categoryFilter);
+    arr.sort((a, b) => (a[state.sortFilter] || '').localeCompare(b[state.sortFilter] || ''));
+    const buckets = [...new Set(arr.map(s => dateBucket(s[state.sortFilter])))];
+    const allOptions = ['all', ...buckets];
+    els.dateBucketFilter.innerHTML = allOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+    if (!allOptions.includes(state.dateBucketFilter)) state.dateBucketFilter = allOptions[0] || 'all';
+    els.dateBucketFilter.value = state.dateBucketFilter;
+  }
+
+  function renderNav() {
+    els.navButtons.forEach((btn) => {
+      const label = (btn.textContent || '').trim().toLowerCase();
+      btn.classList.toggle('active', label === state.activeView);
+    });
+  }
+
+  function renderSubjects() {
+    const list = visibleSubjects();
+    els.subjectList.innerHTML = list.map(s => `
+      <div class="subject-card ${s.id === state.activeId ? 'active' : ''}" data-id="${s.id}">
+        <div class="subject-head">
+          <span>${dateBucket(s.createdAt)}</span>
+          <span>${s.eventAt ? dateBucket(s.eventAt) : 'No event'}</span>
+        </div>
+        <div class="subject-title">${escapeHtml(s.title || 'Untitled')}</div>
+        <div class="subject-meta">
+          <span class="chip">${escapeHtml(s.category)}</span>
+          ${s.sourceFile ? `<span class="chip">${escapeHtml(s.sourceFile)}</span>` : ''}
+        </div>
+      </div>
+    `).join('') || '<div class="small muted">No notes in this view.</div>';
+
+    els.subjectList.querySelectorAll('.subject-card').forEach(card => {
+      card.addEventListener('click', () => setActive(card.dataset.id));
+    });
+
+    els.noteCount.textContent = `Notes: ${list.length} / 12 shown`;
+    els.filterInfo.textContent = `Category: ${state.categoryFilter} · View: ${state.sortFilter} · Jump: ${state.dateBucketFilter}`;
+  }
+
+  function renderEditor() {
+    const note = getActiveNote();
+    if (!note) return;
+    els.titleInput.value = note.title || '';
+    els.bodyInput.value = note.body || '';
+    els.createdAtLabel.textContent = pretty(note.createdAt);
+    els.eventAtLabel.textContent = pretty(note.eventAt);
+    els.eventAtInput.value = toInputDateTime(note.eventAt);
+    els.noteCategory.value = note.category || FIXED_CATEGORIES[0];
+  }
+
+  function renderTimers() {
+    const garden = state.timers.find(t => t.id === 'timer_garden_month') || state.timers[0];
+    const craft = state.timers.find(t => t.id === 'timer_craft_month') || state.timers[1];
+    if (garden) {
+      els.gardeningDue.textContent = `Due: ${pretty(garden.targetAt)}`;
+      const note = state.subjects.find(s => s.id === garden.linkedSubjectId);
+      els.gardeningLink.textContent = note ? `Linked: ${note.title}` : 'No linked note';
+    }
+    if (craft) {
+      els.craftingDue.textContent = `Due: ${pretty(craft.targetAt)}`;
+      const note = state.subjects.find(s => s.id === craft.linkedSubjectId);
+      els.craftingLink.textContent = note ? `Linked: ${note.title}` : 'No linked note';
+    }
+  }
+
+  function renderSwatches() {
+    const colors = state.colorSets[0]?.colors || DEFAULT_SWATCHES;
+    els.swatches.innerHTML = colors.map(c => `<button class="swatch" title="${c.name}" data-name="${c.name}" style="background:${c.value}"><span>${c.name}</span></button>`).join('');
+    els.swatches.querySelectorAll('.swatch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tag = `[${btn.dataset.name}]`;
+        const start = els.bodyInput.selectionStart;
+        const end = els.bodyInput.selectionEnd;
+        const txt = els.bodyInput.value;
+        els.bodyInput.value = txt.slice(0, start) + tag + txt.slice(end);
+        saveCurrentNote();
+      });
+    });
+  }
+
+  function renderEvents() {
+    const events = getUpcomingEvents();
+    els.eventCount.textContent = `Upcoming events: ${events.length}`;
+    els.eventPreview.innerHTML = events.slice(0, 6).map(e => `
+      <div style="margin-bottom:8px;">
+        <strong>${escapeHtml(e.title)}</strong><br>
+        <span class="muted">${escapeHtml(e.file || e.sourceFile || 'session')} · ${pretty(e.eventAt)}</span>
+      </div>
+    `).join('') || 'No event loaded.';
+  }
+
+  function getUpcomingEvents() {
+    const fromSubjects = state.subjects
+      .filter(s => s.eventAt)
+      .map(s => ({ title: s.title, eventAt: s.eventAt, file: s.sourceFile, noteId: s.id }))
+      .sort((a, b) => a.eventAt.localeCompare(b.eventAt));
+    const fromIndex = state.eventIndex?.sources?.flatMap(src => (src.events || []).map(e => ({ ...e, file: src.file }))) || [];
+    return [...fromSubjects, ...fromIndex].sort((a, b) => (a.eventAt || '').localeCompare(b.eventAt || ''));
+  }
+
+  function renderStats() {
+    const vaultCount = new Set(state.subjects.map(s => s.sourceFile || 'session')).size;
+    els.vaultCount.textContent = `Vaults: ${vaultCount}`;
+    els.sessionInfo.textContent = `${vaultCount} vault loaded · ${state.subjects.length} note`;
+  }
+
+  function applyBoardColors(saved) {
+    if (saved?.boardStyle?.bg) document.documentElement.style.setProperty('--board-bg', saved.boardStyle.bg);
+    if (saved?.boardStyle?.fg) document.documentElement.style.setProperty('--board-fg', saved.boardStyle.fg);
+    if (saved?.boardStyle?.line) document.documentElement.style.setProperty('--board-line', saved.boardStyle.line);
+    if (saved?.boardStyle?.bg) els.bgColor.value = saved.boardStyle.bg;
+    if (saved?.boardStyle?.fg) els.fgColor.value = saved.boardStyle.fg;
+    if (saved?.boardStyle?.line) els.lineColor.value = saved.boardStyle.line;
+  }
+
+  function restoreState() {
+    try {
+      const rawSession = localStorage.getItem(STORAGE_KEY);
+      if (rawSession) {
+        const saved = JSON.parse(rawSession);
+        state.sources = saved.sources || state.sources;
+        state.subjects = saved.subjects || state.subjects;
+        state.timers = saved.timers || state.timers;
+        state.colorSets = saved.colorSets || state.colorSets;
+        state.eventIndex = saved.eventIndex || null;
+      }
+
+      const rawUI = localStorage.getItem(UI_KEY);
+      if (rawUI) {
+        const saved = JSON.parse(rawUI);
+        state.categoryFilter = saved.categoryFilter || 'all';
+        state.sortFilter = saved.sortFilter || 'createdAt';
+        state.dateBucketFilter = saved.dateBucketFilter || 'all';
+        state.activeId = saved.activeId || state.activeId;
+        state.activeView = saved.activeView || 'board';
+        applyBoardColors(saved);
+      }
+    } catch (e) {
+      console.warn('Could not restore saved state:', e);
+    }
+  }
+
+  function render() {
+    updateFilterOptions();
+    if (!getActiveNote() && state.subjects[0]) state.activeId = state.subjects[0].id;
+    renderNav();
+    renderSubjects();
+    renderEditor();
+    renderTimers();
+    renderSwatches();
+    renderEvents();
+    renderStats();
+    saveUI();
+  }
+
+  function newNote() {
+    const note = {
+      id: idOf('subj'),
+      sourceFile: 'session.json',
+      title: 'New note',
+      body: '',
+      category: state.categoryFilter !== 'all' ? state.categoryFilter : 'home_maintenance',
+      createdAt: nowIso(),
+      eventAt: null,
+      linkedTimerIds: [],
+      tags: [],
+      zone: '',
+      pinned: false,
+      updatedAt: nowIso()
+    };
+    state.subjects.unshift(note);
+    state.activeId = note.id;
+    state.activeView = 'board';
+    saveSession();
+    render();
+  }
+
+  function duplicateNote() {
+    const note = getActiveNote();
+    if (!note) return;
+    const copy = structuredClone(note);
+    copy.id = idOf('subj');
+    copy.title = `${note.title} copy`;
+    copy.createdAt = nowIso();
+    copy.updatedAt = nowIso();
+    state.subjects.unshift(copy);
+    state.activeId = copy.id;
+    saveSession();
+    render();
+  }
+
+  function deleteNote() {
+    const note = getActiveNote();
+    if (!note) return;
+    state.subjects = state.subjects.filter(s => s.id !== note.id);
+    state.activeId = state.subjects[0]?.id || null;
+    saveSession();
+    render();
+  }
+
+  function downloadJson(filename, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function saveLocal() {
+    persistActive();
+    const note = getActiveNote();
+    if (!note) return;
+    const file = note.sourceFile || 'session.json';
+    const subjects = state.subjects.filter(s => (s.sourceFile || 'session.json') === file);
+    const linkedIds = new Set(subjects.flatMap(s => s.linkedTimerIds || []));
+    const timers = state.timers.filter(t => linkedIds.has(t.id) || subjects.some(s => s.id === t.linkedSubjectId));
+    downloadJson(file, { sources: [{ file }], subjects, timers, colorSets: state.colorSets });
+    saveSession();
+  }
+
+  function exportSession() {
+    persistActive();
+    downloadJson('housing_full_session.json', {
+      sources: [...new Set(state.subjects.map(s => s.sourceFile || 'session.json'))].map(file => ({ file })),
+      subjects: state.subjects,
+      timers: state.timers,
+      colorSets: state.colorSets,
+      exportedAt: nowIso(),
+      uiState: {
+        categoryFilter: state.categoryFilter,
+        sortFilter: state.sortFilter,
+        dateBucketFilter: state.dateBucketFilter,
+        activeId: state.activeId,
+        activeView: state.activeView
+      }
+    });
+    saveSession();
+  }
+
+  function exportIndex() {
+    persistActive();
+    const grouped = {};
+    state.subjects.forEach(s => {
+      const file = s.sourceFile || 'session.json';
+      grouped[file] ||= [];
+      if (s.eventAt) {
+        grouped[file].push({
+          noteId: s.id,
+          title: s.title,
+          category: s.category,
+          eventAt: s.eventAt,
+          timerId: s.linkedTimerIds?.[0] || null
+        });
+      }
+    });
+    const sources = Object.entries(grouped).map(([file, events]) => ({ file, events }));
+    downloadJson('housing_event_index.json', { sources });
+    saveSession();
+  }
+
+  async function loadFiles(files, asIndex = false) {
+    const parsed = [];
+    for (const file of files) {
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        parsed.push({ name: file.name, json });
+      } catch (e) {
+        alert(`Could not load ${file.name}`);
+      }
+    }
+
+    if (asIndex) {
+      state.eventIndex = parsed[0]?.json || null;
+    } else {
+      parsed.forEach(({ name, json }) => {
+        const subjects = (json.subjects || []).map(s => ({ ...s, sourceFile: s.sourceFile || name }));
+        const timers = json.timers || [];
+        const colorSets = json.colorSets || [];
+        state.subjects.push(...subjects);
+        state.timers.push(...timers);
+        if (colorSets.length) state.colorSets = colorSets;
+        state.sources.push({ file: name });
+      });
+    }
+
+    if (!state.activeId && state.subjects[0]) state.activeId = state.subjects[0].id;
+    saveSession();
+    render();
+  }
+
+  function moveDateBucket(direction) {
+    let arr = [...state.subjects];
+    if (state.categoryFilter !== 'all') arr = arr.filter(s => s.category === state.categoryFilter);
+    const buckets = [...new Set(arr.map(s => dateBucket(s[state.sortFilter])))].sort((a, b) => a.localeCompare(b));
+    let idx = Math.max(0, buckets.indexOf(state.dateBucketFilter));
+    idx = Math.min(buckets.length - 1, Math.max(0, idx + direction));
+    state.dateBucketFilter = buckets[idx] || 'all';
+    saveUI();
+    render();
+  }
+
+  function escapeHtml(str = '') {
+    return str.replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function bindEvents() {
+    els.newNoteBtn.addEventListener('click', newNote);
+    els.duplicateBtn.addEventListener('click', duplicateNote);
+    els.deleteBtn.addEventListener('click', deleteNote);
+    els.loadBtn.addEventListener('click', () => { els.fileInput.dataset.mode = 'vault'; els.fileInput.click(); });
+    els.importIndexBtn.addEventListener('click', () => { els.fileInput.dataset.mode = 'index'; els.fileInput.click(); });
+
+    els.fileInput.addEventListener('change', async (e) => {
+      const files = [...e.target.files];
+      const asIndex = e.target.dataset.mode === 'index';
+      await loadFiles(files, asIndex);
+      e.target.value = '';
+    });
+
+    els.saveLocalBtn.addEventListener('click', saveLocal);
+    els.exportSessionBtn.addEventListener('click', exportSession);
+    els.exportIndexBtn.addEventListener('click', exportIndex);
+    els.saveNoteBtn.addEventListener('click', saveCurrentNote);
+
+    els.categoryFilter.addEventListener('change', e => { state.categoryFilter = e.target.value; saveUI(); render(); });
+    els.sortFilter.addEventListener('change', e => { state.sortFilter = e.target.value; saveUI(); render(); });
+    els.dateBucketFilter.addEventListener('change', e => { state.dateBucketFilter = e.target.value; saveUI(); render(); });
+    els.prevDateBtn.addEventListener('click', () => moveDateBucket(-1));
+    els.nextDateBtn.addEventListener('click', () => moveDateBucket(1));
+
+    [els.titleInput, els.bodyInput, els.noteCategory].forEach(el => {
+      el.addEventListener('input', () => {
+        persistActive();
+        saveSession();
+      });
+      el.addEventListener('change', () => {
+        persistActive();
+        saveSession();
+      });
+    });
+
+    els.eventAtInput.addEventListener('change', saveCurrentNote);
+    els.eventAtInput.addEventListener('blur', saveCurrentNote);
+    els.bodyInput.addEventListener('blur', saveCurrentNote);
+
+    els.fgColor.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--board-fg', e.target.value);
+      saveUI();
+    });
+    els.bgColor.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--board-bg', e.target.value);
+      saveUI();
+    });
+    els.lineColor.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--board-line', e.target.value);
+      saveUI();
+    });
+
+    els.navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const label = (btn.textContent || '').trim().toLowerCase();
+        state.activeView = label;
+        saveUI();
+        render();
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveCurrentNote();
+      }
+    });
+  }
+
+  (function init() {
+    restoreState();
+    bindEvents();
+    if (!state.activeId && state.subjects[0]) state.activeId = state.subjects[0].id;
+    saveSession();
+    render();
+  })();
+</script>
+</body>
+</html>
